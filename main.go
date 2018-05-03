@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 	"log"
-	firebase "firebase.google.com/go"
+	"firebase.google.com/go"
 	"google.golang.org/api/option"
 	"golang.org/x/net/context"
 	"cloud.google.com/go/firestore"
@@ -37,6 +37,8 @@ func main() {
 
 	port := os.Getenv("PORT")
 
+	log.Println(port)
+
 	if port == "" {
 		port="8080"
 	}
@@ -46,6 +48,7 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Logger())
+	router.LoadHTMLGlob("templates/*")
 
 	//Routing
 	router.GET("/", index)
@@ -76,6 +79,13 @@ func main() {
 	})
 
 	router.GET("/masuk", func(c *gin.Context){
+		id:=c.Query("id")
+		_, err = client.Collection("Obat").Doc(id).Get(ctx)
+		if err != nil {
+			client.Collection("Obat").Doc(id).Set(ctx, map[string]interface{}{
+				"nama":"aaa",
+			})
+		}
 
 	})
 
@@ -101,10 +111,14 @@ func index(c *gin.Context) {
 
 func sendData(s int, k int, ctx context.Context, client *firestore.Client) error{
 	now:=getTgl()
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		panic(err)
+	}
 	ref, _, err := client.Collection("data").Doc(now.thn).Collection(now.bln).Doc(now.tgl).Collection(now.sub).Add(ctx, map[string]interface{}{
 		"suhu":  s,
 		"kelembapan": k,
-		"waktu": time.Now(),
+		"waktu": time.Now().In(loc),
 	})
 
 	if err != nil {
