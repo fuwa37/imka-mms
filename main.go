@@ -37,14 +37,14 @@ func main() {
 
 	port := os.Getenv("PORT")
 
-	log.Println(port)
-
 	if port == "" {
 		port="8080"
 	}
 	if port == "" {
 		log.Fatal("$PORT must be set")
 	}
+
+	log.Println(port)
 
 	router := gin.New()
 	router.Use(gin.Logger())
