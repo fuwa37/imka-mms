@@ -82,7 +82,7 @@
             var dataLength = 20; // number of dataPoints visible at any point
 
             var updateChart = function (count) {
-                getJSON('http://localhost:8080/last',
+                getJSON('https://imka-mms.herokuapp.com/last',
                         function (err, data) {
                             suhu = data["suhu"];
                             klb = data["kelembapan"];
