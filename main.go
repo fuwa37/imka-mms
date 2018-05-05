@@ -11,6 +11,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"time"
 	"strconv"
+	"github.com/gin-contrib/cors"
 )
 
 type Waktu struct{
@@ -44,14 +45,23 @@ func main() {
 		log.Fatal("$PORT must be set")
 	}
 
-	log.Println(port)
+	//log.Println(port)
 
 	router := gin.New()
+	router.Use(cors.Default())
 	router.Use(gin.Logger())
-	router.LoadHTMLGlob("templates/*")
-
+	router.LoadHTMLGlob("templates/pages/*")
+	router.Static("/vendor","./templates/vendor")
+	router.Static("/dist","./templates/dist")
+	router.Static("/data","./templates/data")
+	router.Static("/js","./templates/js")
+	router.Static("/less","./templates/less")
 	//Routing
 	router.GET("/", index)
+
+	router.GET("/kondisi", func(c *gin.Context){
+		c.HTML(200,"kondisigudang.html","")
+	})
 
 	router.GET("/input", func(c *gin.Context) {
 		suhu:=c.Query("suhu")
@@ -65,7 +75,7 @@ func main() {
 		if err!=nil{
 			c.String(http.StatusBadRequest, err.Error())
 		}
-		c.String(http.StatusOK, "OK")
+		c.String(http.StatusOK, suhu+klb)
 	})
 
 	router.GET("/last", func(c *gin.Context){
@@ -80,17 +90,64 @@ func main() {
 
 	router.GET("/masuk", func(c *gin.Context){
 		id:=c.Query("id")
-		_, err = client.Collection("Obat").Doc(id).Get(ctx)
+		ref, err := client.Collection("Obat").Doc(id).Get(ctx)
 		if err != nil {
-			client.Collection("Obat").Doc(id).Set(ctx, map[string]interface{}{
-				"nama":"aaa",
-			})
+			//log.Printf("Failed: %v", err)
 		}
+		if ref.Exists() {
+			nama, err:=ref.DataAt("nama")
+			if err != nil {
+				log.Printf("Failed: %v", err)
+			}
+			c.HTML(http.StatusOK, "masuk.html", gin.H{
+				"id":id,
+				"nama":nama,
+			})
+		} else {
+			c.Redirect(301,"/baru?id="+id)
+		}
+	})
 
+	router.GET("/baru", func(c *gin.Context) {
+		id := c.Query("id")
+		c.HTML(http.StatusOK, "baru.html", gin.H{
+			"id":id,
+		})
 	})
 
 	router.POST("/masuk", func(c *gin.Context){
+		id := c.PostForm("id")
+		jml:=c.PostForm("jml")
+		_, err = client.Collection("Obat").Doc(id).Update(ctx, []firestore.Update{
+			{Path: "jumlah", Value: jml},
+		})
 
+		if err != nil {
+			log.Printf("Failed: %v", err)
+		}
+	})
+
+	router.POST("/baru", func(c *gin.Context) {
+		id := c.PostForm("id")
+		nama:=c.PostForm("nama")
+		jenis:=c.PostForm("jenis")
+		pd:=c.PostForm("pd")
+		ket:=c.PostForm("ket")
+		jml:=c.PostForm("jml")
+		kdl:=c.PostForm("kdl")
+
+		data:=map[string]interface{}{
+			"nama":nama,
+			"jenis":jenis,
+			"produsen":pd,
+			"keterangan":ket,
+			"jumlah":jml,
+			"kadaluarsa":kdl,
+		}
+		_, err:=client.Collection("Obat").Doc(id).Set(ctx,data)
+		if err != nil {
+			log.Printf("Failed: %v", err)
+		}
 	})
 
 	router.GET("/keluar", func(c *gin.Context){
@@ -109,6 +166,8 @@ func index(c *gin.Context) {
 	c.String(http.StatusOK, "HELLO")
 }
 
+
+
 func sendData(s int, k int, ctx context.Context, client *firestore.Client) error{
 	now:=getTgl()
 	loc, err := time.LoadLocation("Asia/Jakarta")
@@ -122,7 +181,7 @@ func sendData(s int, k int, ctx context.Context, client *firestore.Client) error
 	})
 
 	if err != nil {
-		log.Fatalf("Failed: %v", err)
+		log.Printf("Failed: %v", err)
 	}
 
 	_, err = client.Collection("last").Doc("id").Set(ctx, map[string]interface{}{
@@ -130,7 +189,7 @@ func sendData(s int, k int, ctx context.Context, client *firestore.Client) error
 	})
 
 	if err != nil {
-		log.Fatalf("Failed: %v", err)
+		log.Printf("Failed: %v", err)
 	}
 
 	return err
@@ -152,19 +211,19 @@ func getTgl() Waktu{
 func lastData(ctx context.Context, client *firestore.Client) (map[string]interface{},error) {
 	ref, err := client.Collection("last").Doc("id").Get(ctx)
 	if err != nil {
-		log.Fatalf("Failed: %v", err)
+		log.Printf("Failed: %v", err)
 	}
 
 	last,err:=ref.DataAt("last")
 	if err != nil {
-		log.Fatalf("Failed: %v", err)
+		log.Printf("Failed: %v", err)
 	}
 
 	lastref:=last.(*firestore.DocumentRef)
 
 	dataref, err:=lastref.Get(ctx)
 	if err != nil {
-		log.Fatalf("Failed: %v", err)
+		log.Printf("Failed: %v", err)
 	}
 
 	data:=dataref.Data()
