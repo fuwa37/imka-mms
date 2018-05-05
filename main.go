@@ -59,6 +59,18 @@ func main() {
 	//Routing
 	router.GET("/", index)
 
+	router.GET("/tes1", func(c *gin.Context){
+		c.String(200,"OK")
+	})
+
+	router.GET("/tes2", func(c *gin.Context){
+		c.String(201,"OK1")
+	})
+
+	router.GET("/tes3", func(c *gin.Context){
+		c.String(202,"OK2")
+	})
+
 	router.GET("/kondisi", func(c *gin.Context){
 		c.HTML(200,"kondisigudang.html","")
 	})
