@@ -268,7 +268,7 @@ func main() {
 
 	router.GET("/delete", func(c *gin.Context) {
 		id := c.Query("id")
-		delete(id, ctx, client)
+		hapus(id, ctx, client)
 		c.Redirect(301, "/stok")
 	})
 
@@ -280,7 +280,7 @@ func index(c *gin.Context) {
 	c.String(http.StatusOK, "HELLO")
 }
 
-func delete(id string, ctx context.Context, client *firestore.Client) {
+func hapus(id string, ctx context.Context, client *firestore.Client) {
 	_, err := client.Collection("Obat").Doc(id).Delete(ctx)
 	if err != nil {
 		log.Printf("Failed: %v", err)
