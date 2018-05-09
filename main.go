@@ -82,26 +82,62 @@ func main() {
 		k2 := int(k)
 		if suhu2 > s2 {
 			if klb2 > k2 {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Tidak Aman"},
+					{Path: "kelembapan", Value: "Tidak Aman"},
+				})
 				c.String(http.StatusOK, "NO1")
 			} else if klb2 < k2 {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Tidak Aman"},
+					{Path: "kelembapan", Value: "Tidak Aman"},
+				})
 				c.String(200, "NO2")
 			} else {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Tidak Aman"},
+					{Path: "kelembapan", Value: "Aman"},
+				})
 				c.String(200, "NO3")
 			}
 		} else if suhu2 < s2 {
 			if klb2 > k2 {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Tidak Aman"},
+					{Path: "kelembapan", Value: "Tidak Aman"},
+				})
 				c.String(http.StatusOK, "NO4")
 			} else if klb2 < k2 {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Tidak Aman"},
+					{Path: "kelembapan", Value: "Tidak Aman"},
+				})
 				c.String(200, "NO5")
 			} else {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Tidak Aman"},
+					{Path: "kelembapan", Value: "Aman"},
+				})
 				c.String(200, "NO6")
 			}
 		} else {
 			if klb2 > k2 {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Aman"},
+					{Path: "kelembapan", Value: "Tidak Aman"},
+				})
 				c.String(http.StatusOK, "NO7")
 			} else if klb2 < k2 {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Aman"},
+					{Path: "kelembapan", Value: "Tidak Aman"},
+				})
 				c.String(200, "NO8")
 			} else {
+				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+					{Path: "suhu", Value: "Aman"},
+					{Path: "kelembapan", Value: "Aman"},
+				})
 				c.String(200, "OKK")
 			}
 		}
@@ -113,6 +149,12 @@ func main() {
 		if err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 		}
+
+		c.JSON(http.StatusOK, data)
+	})
+
+	router.GET("/status", func(c *gin.Context) {
+		data := getStatus(ctx, client)
 
 		c.JSON(http.StatusOK, data)
 	})
@@ -225,8 +267,8 @@ func main() {
 
 	router.GET("/delete", func(c *gin.Context) {
 		id := c.Query("id")
-		delete(id,ctx,client)
-		c.Redirect(301,"/stok")
+		delete(id, ctx, client)
+		c.Redirect(301, "/stok")
 	})
 
 	//Run
@@ -310,6 +352,20 @@ func getTgl() Waktu {
 	wkt.sub = strconv.FormatFloat(now.Sub(date).Truncate(time.Second).Seconds(), 'f', -1, 64)
 
 	return wkt
+}
+
+func getStatus(ctx context.Context, client *firestore.Client) map[string]interface{} {
+	ref, err := client.Collection("data").Doc("kondisi").Get(ctx)
+	if err != nil {
+		log.Printf("Failed: %v", err)
+	}
+
+	data := ref.Data()
+	if err != nil {
+		log.Printf("Failed: %v", err)
+	}
+
+	return data
 }
 
 func lastData(ctx context.Context, client *firestore.Client) (map[string]interface{}, error) {

@@ -33,7 +33,6 @@
         }
 
         window.onload = function () {
-            console.log("bbb");
             var getJSON = function (url, callback) {
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', url, true);
@@ -76,6 +75,8 @@
                 }]
             });
 
+            var statuss;
+            var statusk;
             var suhu;
             var klb;
             var wkt;
@@ -83,7 +84,6 @@
             var dataLength = 20; // number of dataPoints visible at any point
 
             var updateChart = function (count) {
-                console.log("aaa");
                 getJSON('https://imka-mms.herokuapp.com/last',
                         function (err, data) {
                             suhu = data["suhu"];
@@ -91,9 +91,17 @@
                             wkt = data["waktu"]
                         });
 
-                console.log(wkt);
                 document.getElementById('suhuc').innerHTML = suhu + " Celcius";
                 document.getElementById('klbp').innerHTML = klb + " %";
+
+                getJSON('https://imka-mms.herokuapp.com/status',
+                        function (err, data) {
+                            statuss=data["suhu"]
+                            statusk=data["kelembapan"]
+                        });
+                document.getElementById('ss').innerHTML = statuss;
+                document.getElementById('sk').innerHTML = statusk;
+
                 count = count || 1;
                 // count is number of times loop runs to generate random dataPoints.
                 for (var j = 0; j < count; j++) {
@@ -299,8 +307,12 @@
                                             </div>
                                             <!-- /.panel-heading -->
                                             <div class="panel-body">
-                                                <div class="col-lg-12">Temperatur = AMAN</div>
-                                                <div class="col-lg-12">Kelembaban = AMAN</div>
+                                                <div class="col-lg-12">Temperatur:
+                                                    <div id="ss"></div>
+                                                </div>
+                                                <div class="col-lg-12">Kelembaban:
+                                                    <div id="sk"></div>
+                                                </div>
                                             </div>
                                             <!-- /.panel-body -->
                                         </div>
