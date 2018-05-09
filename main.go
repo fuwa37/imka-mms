@@ -76,61 +76,62 @@ func main() {
 		if err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 		}
-		data := checkData(ctx, client)
-		s, k := data["suhu"].(int64), data["kelembapan"].(int64)
-		s2 := int(s)
-		k2 := int(k)
-		if suhu2 > s2 {
-			if klb2 > k2 {
+		max,min := checkData(ctx, client)
+		smax, kmax := max["suhu"].(int64), max["kelembapan"].(int64)
+		smin, kmin := min["suhu"].(int64), min["kelembapan"].(int64)
+		smax2, kmax2:=int(smax),int(kmax)
+		smin2, kmin2:=int(smin),int(kmin)
+		if suhu2 > smax2 {
+			if klb2 > kmax2 {
 				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Tidak Aman"},
-					{Path: "kelembapan", Value: "Tidak Aman"},
+					{Path: "suhu", Value: "Lebih Tinggi"},
+					{Path: "kelembapan", Value: "Lebih Tinggi"},
 				})
 				c.String(http.StatusOK, "NO1")
-			} else if klb2 < k2 {
+			} else if klb2 < kmin2 {
 				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Tidak Aman"},
-					{Path: "kelembapan", Value: "Tidak Aman"},
+					{Path: "suhu", Value: "Lebih Tinggi"},
+					{Path: "kelembapan", Value: "Lebih Rendah"},
 				})
 				c.String(200, "NO2")
 			} else {
 				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Tidak Aman"},
+					{Path: "suhu", Value: "Lebih Tinggi"},
 					{Path: "kelembapan", Value: "Aman"},
 				})
 				c.String(200, "NO3")
 			}
-		} else if suhu2 < s2 {
-			if klb2 > k2 {
+		} else if suhu2 < smin2 {
+			if klb2 > kmax2 {
 				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Tidak Aman"},
-					{Path: "kelembapan", Value: "Tidak Aman"},
+					{Path: "suhu", Value: "Lebih Rendah"},
+					{Path: "kelembapan", Value: "Lebih Tinggi"},
 				})
 				c.String(http.StatusOK, "NO4")
-			} else if klb2 < k2 {
+			} else if klb2 < kmin2 {
 				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Tidak Aman"},
-					{Path: "kelembapan", Value: "Tidak Aman"},
+					{Path: "suhu", Value: "Lebih Rendah"},
+					{Path: "kelembapan", Value: "Lebih Rendah"},
 				})
 				c.String(200, "NO5")
 			} else {
 				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Tidak Aman"},
+					{Path: "suhu", Value: "Lebih Rendah"},
 					{Path: "kelembapan", Value: "Aman"},
 				})
 				c.String(200, "NO6")
 			}
 		} else {
-			if klb2 > k2 {
+			if klb2 > kmax2 {
 				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
 					{Path: "suhu", Value: "Aman"},
-					{Path: "kelembapan", Value: "Tidak Aman"},
+					{Path: "kelembapan", Value: "Lebih Tinggi"},
 				})
 				c.String(http.StatusOK, "NO7")
-			} else if klb2 < k2 {
+			} else if klb2 < kmin2 {
 				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
 					{Path: "suhu", Value: "Aman"},
-					{Path: "kelembapan", Value: "Tidak Aman"},
+					{Path: "kelembapan", Value: "Lebih Rendah"},
 				})
 				c.String(200, "NO8")
 			} else {
@@ -300,18 +301,17 @@ func getJml(id string, ctx context.Context, client *firestore.Client) int {
 	return int(last.(int64))
 }
 
-func checkData(ctx context.Context, client *firestore.Client) map[string]interface{} {
-	ref, err := client.Collection("data").Doc("batas").Get(ctx)
+func checkData(ctx context.Context, client *firestore.Client) (map[string]interface{}, map[string]interface{}) {
+	max, err := client.Collection("data").Doc("max").Get(ctx)
+	min, err := client.Collection("data").Doc("min").Get(ctx)
 	if err != nil {
 		log.Printf("Failed: %v", err)
 	}
 
-	data := ref.Data()
-	if err != nil {
-		log.Printf("Failed: %v", err)
-	}
+	datamax := max.Data()
+	datamin := min.Data()
 
-	return data
+	return datamax,datamin
 }
 
 func sendData(s int, k int, ctx context.Context, client *firestore.Client) error {
