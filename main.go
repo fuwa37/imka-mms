@@ -209,6 +209,24 @@ func main() {
 		c.Redirect(301, "/stok")
 	})
 
+	router.GET("/setmaxmin", func(c *gin.Context) {
+		s1, _ := strconv.Atoi(c.Query("s1"))
+		s2, _ := strconv.Atoi(c.Query("s2"))
+		k1, _ := strconv.Atoi(c.Query("k1"))
+		k2, _ := strconv.Atoi(c.Query("k2"))
+
+		setmaxmin(s1, s2, k1, k2, ctx, client)
+	})
+
+	router.GET("/getmax", func(c *gin.Context) {
+		max,_:=checkData(ctx,client)
+		c.JSON(200,max)
+	})
+	router.GET("/getmin", func(c *gin.Context) {
+		_,min:=checkData(ctx,client)
+		c.JSON(200,min)
+	})
+
 	//Run
 	router.Run(":" + port)
 }
@@ -248,7 +266,7 @@ func checkData(ctx context.Context, client *firestore.Client) (map[string]interf
 	datamax := max.Data()
 	datamin := min.Data()
 
-	return datamax,datamin
+	return datamax, datamin
 }
 
 func sendData(s int, k int, ctx context.Context, client *firestore.Client) error {
@@ -346,11 +364,11 @@ func getAll(ctx context.Context, client *firestore.Client) map[string]interface{
 }
 
 func statustemp(suhu2 int, klb2 int, ctx context.Context, client *firestore.Client, c *gin.Context) {
-	max,min := checkData(ctx, client)
+	max, min := checkData(ctx, client)
 	smax, kmax := max["suhu"].(int64), max["kelembapan"].(int64)
 	smin, kmin := min["suhu"].(int64), min["kelembapan"].(int64)
-	smax2, kmax2:=int(smax),int(kmax)
-	smin2, kmin2:=int(smin),int(kmin)
+	smax2, kmax2 := int(smax), int(kmax)
+	smin2, kmin2 := int(smin), int(kmin)
 	if suhu2 > smax2 {
 		if klb2 > kmax2 {
 			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
@@ -412,4 +430,15 @@ func statustemp(suhu2 int, klb2 int, ctx context.Context, client *firestore.Clie
 			c.String(200, "OKK")
 		}
 	}
+}
+
+func setmaxmin(s1, s2, k1, k2 int, ctx context.Context, client *firestore.Client) {
+	_, _ = client.Collection("data").Doc("max").Update(ctx, []firestore.Update{
+		{Path: "suhu", Value: s2},
+		{Path: "kelembapan", Value: k2},
+	})
+	_, _ = client.Collection("data").Doc("min").Update(ctx, []firestore.Update{
+		{Path: "suhu", Value: s1},
+		{Path: "kelembapan", Value: k1},
+	})
 }
