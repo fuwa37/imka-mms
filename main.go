@@ -76,72 +76,9 @@ func main() {
 		if err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 		}
-		max,min := checkData(ctx, client)
-		smax, kmax := max["suhu"].(int64), max["kelembapan"].(int64)
-		smin, kmin := min["suhu"].(int64), min["kelembapan"].(int64)
-		smax2, kmax2:=int(smax),int(kmax)
-		smin2, kmin2:=int(smin),int(kmin)
-		if suhu2 > smax2 {
-			if klb2 > kmax2 {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Lebih Tinggi"},
-					{Path: "kelembapan", Value: "Lebih Tinggi"},
-				})
-				c.String(http.StatusOK, "NO1")
-			} else if klb2 < kmin2 {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Lebih Tinggi"},
-					{Path: "kelembapan", Value: "Lebih Rendah"},
-				})
-				c.String(200, "NO2")
-			} else {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Lebih Tinggi"},
-					{Path: "kelembapan", Value: "Aman"},
-				})
-				c.String(200, "NO3")
-			}
-		} else if suhu2 < smin2 {
-			if klb2 > kmax2 {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Lebih Rendah"},
-					{Path: "kelembapan", Value: "Lebih Tinggi"},
-				})
-				c.String(http.StatusOK, "NO4")
-			} else if klb2 < kmin2 {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Lebih Rendah"},
-					{Path: "kelembapan", Value: "Lebih Rendah"},
-				})
-				c.String(200, "NO5")
-			} else {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Lebih Rendah"},
-					{Path: "kelembapan", Value: "Aman"},
-				})
-				c.String(200, "NO6")
-			}
-		} else {
-			if klb2 > kmax2 {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Aman"},
-					{Path: "kelembapan", Value: "Lebih Tinggi"},
-				})
-				c.String(http.StatusOK, "NO7")
-			} else if klb2 < kmin2 {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Aman"},
-					{Path: "kelembapan", Value: "Lebih Rendah"},
-				})
-				c.String(200, "NO8")
-			} else {
-				_, err = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
-					{Path: "suhu", Value: "Aman"},
-					{Path: "kelembapan", Value: "Aman"},
-				})
-				c.String(200, "OKK")
-			}
-		}
+
+		statustemp(suhu2, klb2, ctx, client, c)
+
 	})
 
 	router.GET("/last", func(c *gin.Context) {
@@ -406,4 +343,73 @@ func getAll(ctx context.Context, client *firestore.Client) map[string]interface{
 	}
 
 	return j
+}
+
+func statustemp(suhu2 int, klb2 int, ctx context.Context, client *firestore.Client, c *gin.Context) {
+	max,min := checkData(ctx, client)
+	smax, kmax := max["suhu"].(int64), max["kelembapan"].(int64)
+	smin, kmin := min["suhu"].(int64), min["kelembapan"].(int64)
+	smax2, kmax2:=int(smax),int(kmax)
+	smin2, kmin2:=int(smin),int(kmin)
+	if suhu2 > smax2 {
+		if klb2 > kmax2 {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Lebih Tinggi"},
+				{Path: "kelembapan", Value: "Lebih Tinggi"},
+			})
+			c.String(http.StatusOK, "NO1")
+		} else if klb2 < kmin2 {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Lebih Tinggi"},
+				{Path: "kelembapan", Value: "Lebih Rendah"},
+			})
+			c.String(200, "NO2")
+		} else {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Lebih Tinggi"},
+				{Path: "kelembapan", Value: "Aman"},
+			})
+			c.String(200, "NO3")
+		}
+	} else if suhu2 < smin2 {
+		if klb2 > kmax2 {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Lebih Rendah"},
+				{Path: "kelembapan", Value: "Lebih Tinggi"},
+			})
+			c.String(http.StatusOK, "NO4")
+		} else if klb2 < kmin2 {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Lebih Rendah"},
+				{Path: "kelembapan", Value: "Lebih Rendah"},
+			})
+			c.String(200, "NO5")
+		} else {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Lebih Rendah"},
+				{Path: "kelembapan", Value: "Aman"},
+			})
+			c.String(200, "NO6")
+		}
+	} else {
+		if klb2 > kmax2 {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Aman"},
+				{Path: "kelembapan", Value: "Lebih Tinggi"},
+			})
+			c.String(http.StatusOK, "NO7")
+		} else if klb2 < kmin2 {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Aman"},
+				{Path: "kelembapan", Value: "Lebih Rendah"},
+			})
+			c.String(200, "NO8")
+		} else {
+			_, _ = client.Collection("data").Doc("kondisi").Update(ctx, []firestore.Update{
+				{Path: "suhu", Value: "Aman"},
+				{Path: "kelembapan", Value: "Aman"},
+			})
+			c.String(200, "OKK")
+		}
+	}
 }
