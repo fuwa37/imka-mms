@@ -1,0 +1,56 @@
+<style>
+    .slider-wrapper {
+        display: inline-block;
+        width: 20px;
+        height: 150px;
+        padding: 0;
+    }
+
+    .slider-wrapper input {
+        width: 150px;
+        height: 20px;
+        margin: 0;
+        transform-origin: 75px 75px;
+        transform: rotate(-90deg);
+    }
+</style>
+
+<head>
+    <script>
+
+        var slider = document.getElementById("myRange");
+        var output = document.getElementById("demo");
+        output.innerHTML = slider.value;
+
+        slider.oninput = function() {
+            output.innerHTML = this.value;
+        }
+
+        function httpGetAsync(theUrl, callback) {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                    callback(xmlHttp.responseText);
+            }
+            xmlHttp.open("GET", theUrl, true); // true for asynchronous
+            xmlHttp.send(null);
+        }
+
+        window.onload = function () {
+            var i;
+
+            httpGetAsync("https://imka-mms.herokuapp.com/input?suhu=20&klb=65", function (err, data) {
+            });
+
+            console.log(i)
+        }
+    </script>
+</head>
+
+<body>
+
+<div class="slider-wrapper">
+    <input type="range" min="0" max="11" value="7" step="1" id="myRange">
+    <p>Value: <span id="demo"></span></p>
+</div>
+</body>
